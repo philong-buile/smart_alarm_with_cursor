@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tab Switching
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
+    const container = document.querySelector('.container');
+    const body = document.querySelector('body');
 
     const switchTab = (tabId) => {
         tabButtons.forEach(btn => {
@@ -36,6 +38,43 @@ document.addEventListener('DOMContentLoaded', () => {
         updateDurationDisplay(countdownSoundDuration, countdownDurationValue);
     });
 
+    // Animation Functions
+    const applyCountdownAnimation = (element) => {
+        element.classList.remove('countdown-animation');
+        void element.offsetWidth; // Trigger reflow
+        element.classList.add('countdown-animation');
+    };
+
+    const updateShakingEffect = (secondsLeft) => {
+        container.classList.remove('shake', 'shake-intense', 'shake-very-intense', 'ease-out');
+        body.classList.remove('red-flash');
+        
+        if (secondsLeft <= 3 && secondsLeft > 0) {
+            if (secondsLeft === 3) {
+                container.classList.add('shake');
+                body.classList.add('red-flash');
+            } else if (secondsLeft === 2) {
+                container.classList.add('shake-intense');
+            } else if (secondsLeft === 1) {
+                container.classList.add('shake-very-intense');
+            }
+        } else if (secondsLeft === 0) {
+            container.classList.add('ease-out');
+        }
+    };
+
+    const updateCountdownStyle = (element, secondsLeft) => {
+        element.classList.remove('countdown-warning', 'countdown-critical');
+        
+        if (secondsLeft <= 3 && secondsLeft > 0) {
+            if (secondsLeft === 3) {
+                element.classList.add('countdown-warning');
+            } else if (secondsLeft <= 2) {
+                element.classList.add('countdown-critical');
+            }
+        }
+    };
+
     // Alarm Functionality
     const alarmTime = document.getElementById('alarm-time');
     const setAlarmBtn = document.getElementById('set-alarm');
@@ -48,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let oscillator;
     let gainNode;
     let alarmTimeout;
+    let alarmCountdownSeconds;
 
     // Initialize audio context
     const initAudioContext = () => {
@@ -72,7 +112,24 @@ document.addEventListener('DOMContentLoaded', () => {
             oscillator.connect(gainNode);
             oscillator.start();
 
-            // Stop the oscillator after the specified duration
+            // Start countdown animation
+            alarmCountdownSeconds = duration;
+            const countdownInterval = setInterval(() => {
+                if (alarmCountdownSeconds > 0) {
+                    alarmCountdownSeconds--;
+                    applyCountdownAnimation(alarmStatus);
+                    updateShakingEffect(alarmCountdownSeconds);
+                    updateCountdownStyle(alarmStatus, alarmCountdownSeconds);
+                    alarmStatus.textContent = `ALARM! ALARM! (${alarmCountdownSeconds}s)`;
+                } else {
+                    clearInterval(countdownInterval);
+                    container.classList.remove('shake', 'shake-intense', 'shake-very-intense');
+                    container.classList.add('ease-out');
+                    alarmStatus.classList.remove('countdown-warning', 'countdown-critical');
+                    alarmStatus.textContent = 'ALARM! ALARM!';
+                }
+            }, 1000);
+            
             oscillator.stop(audioContext.currentTime + duration);
             
             if (alarmSound) {
@@ -81,14 +138,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.warn('HTML5 Audio playback failed:', error);
                 });
 
-                // Stop the audio after the specified duration
                 alarmTimeout = setTimeout(() => {
                     alarmSound.pause();
                     alarmSound.currentTime = 0;
+                    container.classList.remove('ease-out');
+                    body.classList.remove('red-flash');
                 }, duration * 1000);
             }
-            
-            alarmStatus.textContent = 'ALARM! ALARM!';
         } catch (error) {
             console.error('Error playing alarm:', error);
             if (alarmSound) {
@@ -97,10 +153,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error('All audio playback methods failed:', error);
                 });
 
-                // Stop the audio after the specified duration
                 alarmTimeout = setTimeout(() => {
                     alarmSound.pause();
                     alarmSound.currentTime = 0;
+                    container.classList.remove('ease-out');
+                    body.classList.remove('red-flash');
                 }, duration * 1000);
             }
         }
@@ -127,6 +184,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (alarmTimeout) {
             clearTimeout(alarmTimeout);
         }
+
+        container.classList.remove('shake', 'shake-intense', 'shake-very-intense', 'ease-out');
+        body.classList.remove('red-flash');
+        alarmStatus.classList.remove('countdown-warning', 'countdown-critical');
     };
 
     setAlarmBtn.addEventListener('click', () => {
@@ -253,6 +314,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateCountdownDisplay = () => {
         countdownDisplay.textContent = formatCountdownTime(countdownTime);
+        applyCountdownAnimation(countdownDisplay);
+        updateShakingEffect(countdownTime);
+        updateCountdownStyle(countdownDisplay, countdownTime);
     };
 
     const startCountdown = () => {
@@ -300,6 +364,8 @@ document.addEventListener('DOMContentLoaded', () => {
             startCountdownBtn.disabled = false;
             pauseCountdownBtn.disabled = true;
             countdownStatus.textContent = 'Countdown paused';
+            container.classList.remove('shake', 'shake-intense', 'shake-very-intense');
+            countdownDisplay.classList.remove('countdown-warning', 'countdown-critical');
         }
     };
 
@@ -316,6 +382,8 @@ document.addEventListener('DOMContentLoaded', () => {
         countdownMinutes.value = '';
         countdownSeconds.value = '';
         countdownStatus.textContent = 'Countdown reset';
+        container.classList.remove('shake', 'shake-intense', 'shake-very-intense');
+        countdownDisplay.classList.remove('countdown-warning', 'countdown-critical');
     };
 
     startCountdownBtn.addEventListener('click', startCountdown);
