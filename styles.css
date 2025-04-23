@@ -11,6 +11,18 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    transition: background-color 0.5s ease;
+}
+
+/* Red Flash Animation */
+@keyframes red-flash {
+    0% { background-color: #f0f2f5; }
+    10% { background-color: #ff4444; }
+    100% { background-color: #f0f2f5; }
+}
+
+.red-flash {
+    animation: red-flash 2s ease-out;
 }
 
 .container {
@@ -21,6 +33,79 @@ body {
     text-align: center;
     width: 100%;
     max-width: 500px;
+    transition: transform 0.1s ease, background-color 0.5s ease;
+}
+
+/* Shaking Animation */
+@keyframes shake {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(-5px, 5px) rotate(-1deg); }
+    50% { transform: translate(5px, -5px) rotate(1deg); }
+    75% { transform: translate(-5px, 5px) rotate(-1deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+@keyframes shake-intense {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(-10px, 10px) rotate(-2deg); }
+    50% { transform: translate(10px, -10px) rotate(2deg); }
+    75% { transform: translate(-10px, 10px) rotate(-2deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+@keyframes shake-very-intense {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(-15px, 15px) rotate(-3deg); }
+    50% { transform: translate(15px, -15px) rotate(3deg); }
+    75% { transform: translate(-15px, 15px) rotate(-3deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.shake {
+    animation: shake 0.5s ease infinite;
+}
+
+.shake-intense {
+    animation: shake-intense 0.3s ease infinite;
+}
+
+.shake-very-intense {
+    animation: shake-very-intense 0.2s ease infinite;
+}
+
+/* Easing Animation */
+@keyframes ease-out-shake {
+    0% { transform: translate(-15px, 15px) rotate(-3deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.ease-out {
+    animation: ease-out-shake 0.5s ease-out;
+}
+
+/* Countdown Animation */
+@keyframes countdown-drop {
+    0% { transform: translateY(-20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+.countdown-animation {
+    animation: countdown-drop 0.5s ease-out;
+}
+
+/* Color Change Animation */
+@keyframes color-pulse {
+    0% { color: #1a73e8; }
+    50% { color: #ff4444; }
+    100% { color: #1a73e8; }
+}
+
+.countdown-warning {
+    animation: color-pulse 1s ease infinite;
+}
+
+.countdown-critical {
+    animation: color-pulse 0.5s ease infinite;
 }
 
 h1 {
