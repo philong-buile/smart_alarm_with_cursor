@@ -15,7 +15,7 @@ const AlarmModal = ({ isOpen, onClose, onSave }: AlarmModalProps) => {
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [sound, setSound] = useState(ALARM_SOUNDS[0].name);
-  const [repeat, setRepeat] = useState(false);
+  const [repeat, setRepeat] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Set initial time to current time when modal opens

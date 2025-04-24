@@ -11,7 +11,6 @@ interface QuickAlarmOptionsProps {
 }
 
 const QUICK_OPTIONS: QuickOption[] = [
-  { label: '30 sec', seconds: 30, minutes: 0 },
   { label: '1 min', minutes: 1 },
   { label: '15 min', minutes: 15 },
   { label: '30 min', minutes: 30 },
