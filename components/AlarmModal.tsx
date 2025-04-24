@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, ChevronUp, ChevronDown, Play, Square } from 'lucide-react';
 import { soundPlayer, ALARM_SOUNDS } from '../utils/sounds';
+import QuickAlarmOptions from './QuickAlarmOptions';
 
 interface AlarmModalProps {
   isOpen: boolean;
@@ -11,11 +12,20 @@ interface AlarmModalProps {
 }
 
 const AlarmModal = ({ isOpen, onClose, onSave }: AlarmModalProps) => {
-  const [hours, setHours] = useState(10);
+  const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [sound, setSound] = useState(ALARM_SOUNDS[0].name);
   const [repeat, setRepeat] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  // Set initial time to current time when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const now = new Date();
+      setHours(now.getHours());
+      setMinutes(now.getMinutes());
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -29,6 +39,16 @@ const AlarmModal = ({ isOpen, onClose, onSave }: AlarmModalProps) => {
     if (value >= 0 && value <= 59) {
       setMinutes(value);
     }
+  };
+
+  const handleQuickOptionSelect = (addMinutes: number, addSeconds?: number) => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + addMinutes);
+    if (addSeconds) {
+      now.setSeconds(now.getSeconds() + addSeconds);
+    }
+    setHours(now.getHours());
+    setMinutes(now.getMinutes());
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -67,6 +87,9 @@ const AlarmModal = ({ isOpen, onClose, onSave }: AlarmModalProps) => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Quick Options */}
+          <QuickAlarmOptions onSelect={handleQuickOptionSelect} />
+
           {/* Time Selection */}
           <div className="flex justify-between items-center">
             <div className="space-y-2">
