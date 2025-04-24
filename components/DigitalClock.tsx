@@ -3,10 +3,13 @@
 import { useState, useEffect } from 'react';
 import { Share2, Minus, Plus, Maximize2, Bell, X } from 'lucide-react';
 import AlarmModal from './AlarmModal';
+import { soundPlayer, ALARM_SOUNDS } from '../utils/sounds';
 
 interface Alarm {
-  time: string;
-  label: string;
+  hours: number;
+  minutes: number;
+  sound: string;
+  repeat: boolean;
   isActive: boolean;
 }
 
@@ -15,6 +18,15 @@ const DigitalClock = () => {
   const [isAlarmModalOpen, setIsAlarmModalOpen] = useState(false);
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [showAlarms, setShowAlarms] = useState(false);
+
+  // Validate existing alarms against available sounds
+  useEffect(() => {
+    setAlarms(prevAlarms => 
+      prevAlarms.filter(alarm => 
+        ALARM_SOUNDS.some(sound => sound.name === alarm.sound)
+      )
+    );
+  }, []);
 
   useEffect(() => {
     setTime(new Date());
@@ -25,18 +37,19 @@ const DigitalClock = () => {
       // Check alarms
       alarms.forEach(alarm => {
         if (alarm.isActive) {
-          const [alarmHours, alarmMinutes] = alarm.time.split(':');
-          if (now.getHours() === parseInt(alarmHours) && 
-              now.getMinutes() === parseInt(alarmMinutes) && 
+          if (now.getHours() === alarm.hours && 
+              now.getMinutes() === alarm.minutes && 
               now.getSeconds() === 0) {
-            playAlarmSound();
-            alert(`Alarm: ${alarm.label || 'Time to wake up!'}`);
+            soundPlayer.play(alarm.sound, alarm.repeat);
           }
         }
       });
     }, 1000);
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      soundPlayer.stop(); // Clean up any playing sounds when component unmounts
+    };
   }, [alarms]);
 
   const formatTime = (date: Date | null) => {
@@ -59,13 +72,20 @@ const DigitalClock = () => {
     }).toUpperCase();
   };
 
-  const playAlarmSound = () => {
+  const formatAlarmTime = (hours: number, minutes: number) => {
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  };
+
+  const playAlarmSound = (sound: string, repeat: boolean) => {
+    // TODO: Implement different alarm sounds
     const audio = new Audio('/alarm-sound.mp3');
+    audio.loop = repeat;
     audio.play().catch(error => console.log('Error playing alarm sound:', error));
   };
 
-  const handleSetAlarm = (time: string, label: string) => {
-    setAlarms(prev => [...prev, { time, label, isActive: true }]);
+  const handleSetAlarm = (hours: number, minutes: number, sound: string, repeat: boolean) => {
+    setAlarms(prev => [...prev, { hours, minutes, sound, repeat, isActive: true }]);
+    setIsAlarmModalOpen(false);
   };
 
   const toggleAlarm = (index: number) => {
@@ -124,7 +144,7 @@ const DigitalClock = () => {
         <div className="mt-8 flex flex-col items-center space-y-4">
           <button
             onClick={() => setIsAlarmModalOpen(true)}
-            className="px-8 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 flex items-center space-x-2"
+            className="px-8 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 flex items-center space-x-2"
           >
             <Bell size={20} />
             <span>Set Alarm</span>
@@ -150,21 +170,23 @@ const DigitalClock = () => {
                     <button
                       onClick={() => toggleAlarm(index)}
                       className={`p-1 rounded-full ${
-                        alarm.isActive ? 'text-green-500' : 'text-gray-500'
+                        alarm.isActive ? 'text-blue-500' : 'text-gray-500'
                       }`}
+                      aria-label={alarm.isActive ? 'Disable alarm' : 'Enable alarm'}
                     >
                       <Bell size={16} />
                     </button>
                     <div>
-                      <div className="font-medium">{alarm.time}</div>
-                      {alarm.label && (
-                        <div className="text-sm text-gray-400">{alarm.label}</div>
-                      )}
+                      <div className="font-medium">{formatAlarmTime(alarm.hours, alarm.minutes)}</div>
+                      <div className="text-sm text-gray-400">
+                        {alarm.sound} {alarm.repeat && '• Repeat'}
+                      </div>
                     </div>
                   </div>
                   <button
                     onClick={() => deleteAlarm(index)}
                     className="text-gray-400 hover:text-red-500 transition-colors"
+                    aria-label="Delete alarm"
                   >
                     <X size={16} />
                   </button>

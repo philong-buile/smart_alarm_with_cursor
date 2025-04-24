@@ -1,86 +1,205 @@
 'use client';
 
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, ChevronUp, ChevronDown, Play, Square } from 'lucide-react';
+import { soundPlayer, ALARM_SOUNDS } from '../utils/sounds';
 
 interface AlarmModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (time: string, label: string) => void;
+  onSave: (hours: number, minutes: number, sound: string, repeat: boolean) => void;
 }
 
 const AlarmModal = ({ isOpen, onClose, onSave }: AlarmModalProps) => {
-  const [time, setTime] = useState('');
-  const [label, setLabel] = useState('');
+  const [hours, setHours] = useState(10);
+  const [minutes, setMinutes] = useState(0);
+  const [sound, setSound] = useState(ALARM_SOUNDS[0].name);
+  const [repeat, setRepeat] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   if (!isOpen) return null;
 
+  const handleHoursChange = (value: number) => {
+    if (value >= 0 && value <= 23) {
+      setHours(value);
+    }
+  };
+
+  const handleMinutesChange = (value: number) => {
+    if (value >= 0 && value <= 59) {
+      setMinutes(value);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (time) {
-      onSave(time, label);
-      setTime('');
-      setLabel('');
-      onClose();
+    onSave(hours, minutes, sound, repeat);
+  };
+
+  const handlePreviewSound = () => {
+    if (isPlaying) {
+      soundPlayer.stop();
+      setIsPlaying(false);
+    } else {
+      soundPlayer.play(sound, false, 3); // Play for 3 seconds
+      setIsPlaying(true);
+      setTimeout(() => setIsPlaying(false), 3000);
     }
+  };
+
+  const handleTestAlarm = () => {
+    soundPlayer.play(sound, repeat, repeat ? undefined : 5); // Play for 5 seconds if not repeating
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-          aria-label="Close modal"
-        >
-          <X size={20} />
-        </button>
+      <div className="bg-gray-800 rounded-lg w-full max-w-md relative">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+          <h2 className="text-2xl font-semibold text-white">Edit Alarm</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+            aria-label="Close modal"
+          >
+            <X size={24} />
+          </button>
+        </div>
 
-        <h2 className="text-2xl font-bold text-white mb-6">Set Alarm</h2>
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Time Selection */}
+          <div className="flex justify-between items-center">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-300">Hours</label>
+              <div className="flex items-center space-x-4">
+                <button
+                  type="button"
+                  onClick={() => handleHoursChange(hours - 1)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                  aria-label="Decrease hours"
+                >
+                  <ChevronDown size={24} />
+                </button>
+                <select
+                  value={hours}
+                  onChange={(e) => handleHoursChange(parseInt(e.target.value))}
+                  className="w-24 px-3 py-2 bg-gray-700 rounded-md text-white text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <option key={i} value={i}>
+                      {i.toString().padStart(2, '0')}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => handleHoursChange(hours + 1)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                  aria-label="Increase hours"
+                >
+                  <ChevronUp size={24} />
+                </button>
+              </div>
+            </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="time" className="block text-sm font-medium text-gray-300 mb-2">
-              Time
-            </label>
-            <input
-              type="time"
-              id="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-              required
-            />
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-300">Minutes</label>
+              <div className="flex items-center space-x-4">
+                <button
+                  type="button"
+                  onClick={() => handleMinutesChange(minutes - 1)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                  aria-label="Decrease minutes"
+                >
+                  <ChevronDown size={24} />
+                </button>
+                <select
+                  value={minutes}
+                  onChange={(e) => handleMinutesChange(parseInt(e.target.value))}
+                  className="w-24 px-3 py-2 bg-gray-700 rounded-md text-white text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {Array.from({ length: 60 }, (_, i) => (
+                    <option key={i} value={i}>
+                      {i.toString().padStart(2, '0')}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => handleMinutesChange(minutes + 1)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                  aria-label="Increase minutes"
+                >
+                  <ChevronUp size={24} />
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label htmlFor="label" className="block text-sm font-medium text-gray-300 mb-2">
-              Label (optional)
-            </label>
-            <input
-              type="text"
-              id="label"
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              placeholder="Wake up, Meeting, etc."
-              className="w-full px-3 py-2 bg-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
+          {/* Sound Selection */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-300">Sound</label>
+            <div className="flex items-center space-x-2">
+              <select
+                value={sound}
+                onChange={(e) => setSound(e.target.value)}
+                className="flex-1 px-3 py-2 bg-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {ALARM_SOUNDS.map((s) => (
+                  <option key={s.name} value={s.name}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={handlePreviewSound}
+                className="p-2 text-gray-400 hover:text-white transition-colors"
+                aria-label={isPlaying ? 'Stop preview' : 'Preview sound'}
+              >
+                {isPlaying ? <Square size={20} /> : <Play size={20} />}
+              </button>
+            </div>
           </div>
 
-          <div className="flex justify-end space-x-4">
+          {/* Repeat Toggle */}
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              id="repeat"
+              checked={repeat}
+              onChange={(e) => setRepeat(e.target.checked)}
+              className="w-4 h-4 text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+            />
+            <label htmlFor="repeat" className="text-sm font-medium text-gray-300">
+              Repeat sound
+            </label>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-between pt-4 border-t border-gray-700">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleTestAlarm}
               className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
             >
-              Cancel
+              Test
             </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800"
-            >
-              Set Alarm
-            </button>
+            <div className="space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800"
+              >
+                Start
+              </button>
+            </div>
           </div>
         </form>
       </div>
