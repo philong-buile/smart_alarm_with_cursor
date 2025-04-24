@@ -3,41 +3,21 @@
 import { useState, useEffect } from 'react';
 import { Share2, Minus, Plus, Maximize2, Bell, X } from 'lucide-react';
 import AlarmModal from './AlarmModal';
-
-interface Alarm {
-  time: string;
-  label: string;
-  isActive: boolean;
-}
+import { useAlarm } from '../contexts/AlarmContext';
 
 const DigitalClock = () => {
   const [time, setTime] = useState<Date | null>(null);
   const [isAlarmModalOpen, setIsAlarmModalOpen] = useState(false);
-  const [alarms, setAlarms] = useState<Alarm[]>([]);
-  const [showAlarms, setShowAlarms] = useState(false);
+  const { alarms, setAlarm, toggleAlarm, deleteAlarm } = useAlarm();
 
   useEffect(() => {
     setTime(new Date());
     const timer = setInterval(() => {
-      const now = new Date();
-      setTime(now);
-      
-      // Check alarms
-      alarms.forEach(alarm => {
-        if (alarm.isActive) {
-          const [alarmHours, alarmMinutes] = alarm.time.split(':');
-          if (now.getHours() === parseInt(alarmHours) && 
-              now.getMinutes() === parseInt(alarmMinutes) && 
-              now.getSeconds() === 0) {
-            playAlarmSound();
-            alert(`Alarm: ${alarm.label || 'Time to wake up!'}`);
-          }
-        }
-      });
+      setTime(new Date());
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [alarms]);
+  }, []);
 
   const formatTime = (date: Date | null) => {
     if (!date) return '--:--:-- --';
@@ -59,23 +39,13 @@ const DigitalClock = () => {
     }).toUpperCase();
   };
 
-  const playAlarmSound = () => {
-    const audio = new Audio('/alarm-sound.mp3');
-    audio.play().catch(error => console.log('Error playing alarm sound:', error));
+  const formatAlarmTime = (hours: number, minutes: number) => {
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   };
 
-  const handleSetAlarm = (time: string, label: string) => {
-    setAlarms(prev => [...prev, { time, label, isActive: true }]);
-  };
-
-  const toggleAlarm = (index: number) => {
-    setAlarms(prev => prev.map((alarm, i) => 
-      i === index ? { ...alarm, isActive: !alarm.isActive } : alarm
-    ));
-  };
-
-  const deleteAlarm = (index: number) => {
-    setAlarms(prev => prev.filter((_, i) => i !== index));
+  const handleSetAlarm = (hours: number, minutes: number, sound: string, repeat: boolean) => {
+    setAlarm(hours, minutes, sound, repeat);
+    setIsAlarmModalOpen(false);
   };
 
   return (
@@ -124,22 +94,13 @@ const DigitalClock = () => {
         <div className="mt-8 flex flex-col items-center space-y-4">
           <button
             onClick={() => setIsAlarmModalOpen(true)}
-            className="px-8 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 flex items-center space-x-2"
+            className="px-8 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 flex items-center space-x-2"
           >
             <Bell size={20} />
             <span>Set Alarm</span>
           </button>
 
           {alarms.length > 0 && (
-            <button
-              onClick={() => setShowAlarms(!showAlarms)}
-              className="text-gray-300 hover:text-white transition-colors"
-            >
-              {showAlarms ? 'Hide Alarms' : `Show Alarms (${alarms.length})`}
-            </button>
-          )}
-
-          {showAlarms && alarms.length > 0 && (
             <div className="w-full max-w-md space-y-2">
               {alarms.map((alarm, index) => (
                 <div
@@ -150,21 +111,23 @@ const DigitalClock = () => {
                     <button
                       onClick={() => toggleAlarm(index)}
                       className={`p-1 rounded-full ${
-                        alarm.isActive ? 'text-green-500' : 'text-gray-500'
+                        alarm.isActive ? 'text-blue-500' : 'text-gray-500'
                       }`}
+                      aria-label={alarm.isActive ? 'Disable alarm' : 'Enable alarm'}
                     >
                       <Bell size={16} />
                     </button>
                     <div>
-                      <div className="font-medium">{alarm.time}</div>
-                      {alarm.label && (
-                        <div className="text-sm text-gray-400">{alarm.label}</div>
-                      )}
+                      <div className="font-medium">{formatAlarmTime(alarm.hours, alarm.minutes)}</div>
+                      <div className="text-sm text-gray-400">
+                        {alarm.sound} {alarm.repeat && '• Repeat'}
+                      </div>
                     </div>
                   </div>
                   <button
                     onClick={() => deleteAlarm(index)}
                     className="text-gray-400 hover:text-red-500 transition-colors"
+                    aria-label="Delete alarm"
                   >
                     <X size={16} />
                   </button>

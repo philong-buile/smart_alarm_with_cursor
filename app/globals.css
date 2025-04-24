@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'DS-Digital';
+  src: url('https://db.onlinewebfonts.com/t/1db29588408eadbd4406aae9238555eb.eot');
+  src: url('https://db.onlinewebfonts.com/t/1db29588408eadbd4406aae9238555eb.eot?#iefix') format('embedded-opentype'),
+       url('https://db.onlinewebfonts.com/t/1db29588408eadbd4406aae9238555eb.woff2') format('woff2'),
+       url('https://db.onlinewebfonts.com/t/1db29588408eadbd4406aae9238555eb.woff') format('woff'),
+       url('https://db.onlinewebfonts.com/t/1db29588408eadbd4406aae9238555eb.ttf') format('truetype'),
+       url('https://db.onlinewebfonts.com/t/1db29588408eadbd4406aae9238555eb.svg#DS-Digital') format('svg');
+}
+
+.font-digital {
+  font-family: 'DS-Digital', monospace;
+}
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 0, 0, 0;
+  --background-end-rgb: 0, 0, 0;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+} 
