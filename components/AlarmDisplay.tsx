@@ -15,10 +15,10 @@ const AlarmDisplay = ({ alarmTime, alarmAmPm, onStopAlarm }: AlarmDisplayProps) 
   useEffect(() => {
     const calculateRemainingTime = () => {
       const now = new Date();
-      const [hours, minutes] = alarmTime.split(':');
+      const [hourStr, minuteStr] = alarmTime.split(':');
       const alarmDate = new Date();
       
-      let alarmHours = parseInt(hours);
+      let alarmHours = parseInt(hourStr);
       if (alarmAmPm === 'PM' && alarmHours !== 12) {
         alarmHours += 12;
       } else if (alarmAmPm === 'AM' && alarmHours === 12) {
@@ -26,7 +26,7 @@ const AlarmDisplay = ({ alarmTime, alarmAmPm, onStopAlarm }: AlarmDisplayProps) 
       }
       
       alarmDate.setHours(alarmHours);
-      alarmDate.setMinutes(parseInt(minutes));
+      alarmDate.setMinutes(parseInt(minuteStr));
       alarmDate.setSeconds(0);
 
       // If alarm time is earlier than current time, set it for next day
