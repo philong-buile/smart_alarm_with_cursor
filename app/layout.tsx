@@ -1,5 +1,6 @@
 import '../styles/globals.css';
 import { Inter } from 'next/font/google';
+import ClientLayout from '../components/ClientLayout';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -8,11 +9,7 @@ export const metadata = {
   description: 'A modern digital clock and alarm application',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+const RootLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <html lang="en" className="dark">
       <head>
@@ -22,8 +19,10 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.className} min-h-screen bg-gray-900 text-white antialiased`}>
-        {children}
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
-} 
+};
+
+export default RootLayout; 

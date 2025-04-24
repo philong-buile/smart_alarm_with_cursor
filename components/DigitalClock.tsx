@@ -3,86 +3,21 @@
 import { useState, useEffect } from 'react';
 import { Share2, Minus, Plus, Maximize2, Bell, X } from 'lucide-react';
 import AlarmModal from './AlarmModal';
-import AlarmNotificationModal from './AlarmNotificationModal';
-import { soundPlayer, ALARM_SOUNDS } from '../utils/sounds';
-
-interface Alarm {
-  hours: number;
-  minutes: number;
-  sound: string;
-  repeat: boolean;
-  isActive: boolean;
-}
+import { useAlarm } from '../contexts/AlarmContext';
 
 const DigitalClock = () => {
   const [time, setTime] = useState<Date | null>(null);
   const [isAlarmModalOpen, setIsAlarmModalOpen] = useState(false);
-  const [alarms, setAlarms] = useState<Alarm[]>([]);
-  const [activeAlarm, setActiveAlarm] = useState<{ index: number; time: string } | null>(null);
-
-  // Validate existing alarms against available sounds
-  useEffect(() => {
-    setAlarms(prevAlarms => 
-      prevAlarms.filter(alarm => 
-        ALARM_SOUNDS.some(sound => sound.name === alarm.sound)
-      )
-    );
-  }, []);
+  const { alarms, setAlarm, toggleAlarm, deleteAlarm } = useAlarm();
 
   useEffect(() => {
     setTime(new Date());
     const timer = setInterval(() => {
-      const now = new Date();
-      setTime(now);
-      
-      // Check alarms
-      alarms.forEach((alarm, index) => {
-        if (alarm.isActive) {
-          if (now.getHours() === alarm.hours && 
-              now.getMinutes() === alarm.minutes && 
-              now.getSeconds() === 0) {
-            soundPlayer.play(alarm.sound, alarm.repeat);
-            const formattedTime = `${alarm.hours.toString().padStart(2, '0')}:${alarm.minutes.toString().padStart(2, '0')}`;
-            setActiveAlarm({ index, time: formattedTime });
-          }
-        }
-      });
+      setTime(new Date());
     }, 1000);
 
-    return () => {
-      clearInterval(timer);
-      soundPlayer.stop();
-    };
-  }, [alarms]);
-
-  const handleStopAlarm = () => {
-    if (activeAlarm === null) return;
-    
-    soundPlayer.stop();
-    setAlarms(prev => prev.filter((_, i) => i !== activeAlarm.index));
-    setActiveAlarm(null);
-  };
-
-  const handleSnoozeAlarm = () => {
-    if (activeAlarm === null) return;
-
-    soundPlayer.stop();
-    
-    // Calculate new alarm time (current time + 5 minutes)
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + 5);
-    
-    setAlarms(prev => prev.map((alarm, i) => 
-      i === activeAlarm.index
-        ? {
-            ...alarm,
-            hours: now.getHours(),
-            minutes: now.getMinutes(),
-          }
-        : alarm
-    ));
-    setActiveAlarm(null);
-  };
+    return () => clearInterval(timer);
+  }, []);
 
   const formatTime = (date: Date | null) => {
     if (!date) return '--:--:-- --';
@@ -108,26 +43,9 @@ const DigitalClock = () => {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   };
 
-  const playAlarmSound = (sound: string, repeat: boolean) => {
-    // TODO: Implement different alarm sounds
-    const audio = new Audio('/alarm-sound.mp3');
-    audio.loop = repeat;
-    audio.play().catch(error => console.log('Error playing alarm sound:', error));
-  };
-
   const handleSetAlarm = (hours: number, minutes: number, sound: string, repeat: boolean) => {
-    setAlarms(prev => [...prev, { hours, minutes, sound, repeat, isActive: true }]);
+    setAlarm(hours, minutes, sound, repeat);
     setIsAlarmModalOpen(false);
-  };
-
-  const toggleAlarm = (index: number) => {
-    setAlarms(prev => prev.map((alarm, i) => 
-      i === index ? { ...alarm, isActive: !alarm.isActive } : alarm
-    ));
-  };
-
-  const deleteAlarm = (index: number) => {
-    setAlarms(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -224,13 +142,6 @@ const DigitalClock = () => {
         isOpen={isAlarmModalOpen}
         onClose={() => setIsAlarmModalOpen(false)}
         onSave={handleSetAlarm}
-      />
-
-      <AlarmNotificationModal
-        isOpen={activeAlarm !== null}
-        onClose={handleStopAlarm}
-        onSnooze={handleSnoozeAlarm}
-        alarmTime={activeAlarm?.time || ''}
       />
     </div>
   );
