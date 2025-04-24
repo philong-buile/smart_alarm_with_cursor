@@ -18,7 +18,6 @@ const DigitalClock = () => {
   const [time, setTime] = useState<Date | null>(null);
   const [isAlarmModalOpen, setIsAlarmModalOpen] = useState(false);
   const [alarms, setAlarms] = useState<Alarm[]>([]);
-  const [showAlarms, setShowAlarms] = useState(false);
   const [activeAlarm, setActiveAlarm] = useState<{ index: number; time: string } | null>(null);
 
   // Validate existing alarms against available sounds
@@ -184,15 +183,6 @@ const DigitalClock = () => {
           </button>
 
           {alarms.length > 0 && (
-            <button
-              onClick={() => setShowAlarms(!showAlarms)}
-              className="text-gray-300 hover:text-white transition-colors"
-            >
-              {showAlarms ? 'Hide Alarms' : `Show Alarms (${alarms.length})`}
-            </button>
-          )}
-
-          {showAlarms && alarms.length > 0 && (
             <div className="w-full max-w-md space-y-2">
               {alarms.map((alarm, index) => (
                 <div
